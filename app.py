@@ -4,9 +4,11 @@ import os
 
 app = Flask(__name__)
 
+
 @app.route("/")
 def home():
     return render_template("index.html")
+
 
 @app.route("/add_subject", methods=["POST"])
 def add_subject():
@@ -26,7 +28,22 @@ def add_subject():
     with open(file, "w") as f:
         json.dump(subjects, f, indent=4)
 
-    return jsonify({"message":"saved"})
+    return jsonify({"message": "saved"})
+
+
+@app.route("/get_subjects")
+def get_subjects():
+
+    file = "data/subjects.json"
+
+    if os.path.exists(file):
+        with open(file, "r") as f:
+            subjects = json.load(f)
+    else:
+        subjects = []
+
+    return jsonify(subjects)
+
 
 if __name__ == "__main__":
-    app.run(debug=True) 
+    app.run(debug=True)

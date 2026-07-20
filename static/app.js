@@ -1,5 +1,7 @@
 let btn = document.getElementById("addBtn");
 
+loadSubjects();
+
 btn.addEventListener("click", function(){
 
     let subject = document.getElementById("subject").value;
@@ -13,8 +15,8 @@ btn.addEventListener("click", function(){
     }
 
     fetch("/add_subject", {
-        method:"POST",
-        headers:{
+        method: "POST",
+        headers: {
             "Content-Type":"application/json"
         },
         body: JSON.stringify({
@@ -26,11 +28,35 @@ btn.addEventListener("click", function(){
     })
     .then(response => response.json())
     .then(data => {
-        alert("Subject Saved");
 
         document.getElementById("subject").value = "";
         document.getElementById("cu").value = "";
         document.getElementById("exam").value = "";
+
+        loadSubjects();
     });
 
 });
+
+function loadSubjects(){
+
+    fetch("/get_subjects")
+    .then(response => response.json())
+    .then(data => {
+
+        let list = document.getElementById("subjectList");
+
+        list.innerHTML = "";
+
+        for(let i = 0; i < data.length; i++){
+
+            list.innerHTML +=
+            "<b>" + data[i].subject + "</b><br>" +
+            "CU: " + data[i].cu + "<br>" +
+            "Priority: " + data[i].priority + "<br>" +
+            "Exam: " + data[i].exam + "<hr>";
+        }
+
+    });
+
+}
