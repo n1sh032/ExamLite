@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ExamLite</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <h1>ExamLite</h1>
+
+    <p>Subject Name</p>
+    <input type="text" id="subject">
+
+    <br><br>
+
+    <p>Credit Units</p>
+    <input type="number" id="cu">
+
+    <br><br>
+
+    <p>Priority</p>
+
+    <select id="priority">
+        <option>High</option>
+        <option>Medium</option>
+        <option>Low</option>
+    </select>
+
+    <br><br>
+
+    <p>Exam Date</p>
+    <input type="date" id="exam">
+
+    <br><br>
+
+    <button id="addBtn">Add Subject</button>
+
+    <hr>
+
+    <h2>Subjects</h2>
+
+    <div id="subjectList"></div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
+</body>
+
+</html>
