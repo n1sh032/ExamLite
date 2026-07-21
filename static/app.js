@@ -38,7 +38,6 @@ btn.addEventListener("click", function () {
 
 });
 
-
 function loadSubjects() {
 
     fetch("/get_subjects")
@@ -49,7 +48,21 @@ function loadSubjects() {
 
         list.innerHTML = "";
 
+        let highCount = 0;
+        let nearestExam = null;
+
         for (let i = 0; i < data.length; i++) {
+
+            if (data[i].priority == "High") {
+                highCount++;
+            }
+
+            if (nearestExam == null) {
+                nearestExam = data[i].exam;
+            }
+            else if (data[i].exam < nearestExam) {
+                nearestExam = data[i].exam;
+            }
 
             list.innerHTML +=
                 "<b>" + data[i].subject + "</b><br>" +
@@ -60,10 +73,19 @@ function loadSubjects() {
                 "<hr>";
         }
 
+        document.getElementById("totalSubjects").innerText = data.length;
+        document.getElementById("highSubjects").innerText = highCount;
+
+        if (nearestExam != null) {
+            document.getElementById("nearestExam").innerText = nearestExam;
+        }
+        else {
+            document.getElementById("nearestExam").innerText = "None";
+        }
+
     });
 
 }
-
 
 function delSub(i) {
 
