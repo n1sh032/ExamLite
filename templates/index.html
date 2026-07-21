@@ -1,80 +1,31 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="UTF-8">
     <title>ExamLite</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-    <div class="page-header">
-        <h1>ExamLite</h1>
-        <p class="intro">Organize your subjects and get weekly study recommendations based on priority, credit units, and exam urgency.</p>
-    </div>
-
+    <div class="page-header"><h1>ExamLite</h1><p class="intro">Organize your subjects and get weekly study recommendations based on priority, credit units, and exam urgency.</p></div>
     <div class="layout">
         <section class="panel">
             <h2>Add a Subject</h2>
-
-            <div class="form-row">
-                <label for="subject">Subject Name</label>
-                <input type="text" id="subject" placeholder="e.g. Calculus">
-            </div>
-
-            <div class="form-row">
-                <label for="cu">Credit Units</label>
-                <input type="number" id="cu" min="1" placeholder="3">
-            </div>
-
-            <div class="form-row">
-                <label for="priority">Priority</label>
-                <select id="priority">
-                    <option>High</option>
-                    <option>Medium</option>
-                    <option>Low</option>
-                </select>
-            </div>
-
-            <div class="form-row">
-                <label for="exam">Exam Date</label>
-                <input type="date" id="exam">
-            </div>
-
-            <button id="addBtn">Add Subject</button>
+            <div class="form-row"><label for="subject">Subject Name</label><input type="text" id="subject" placeholder="e.g. Calculus" required></div>
+            <div class="form-row"><label for="cu">Credit Units</label><input type="number" id="cu" min="1" placeholder="3" required></div>
+            <div class="form-row"><label for="priority">Priority</label><select id="priority"><option>High</option><option>Medium</option><option>Low</option></select></div>
+            <div class="form-row"><label for="exam">Exam Date</label><input type="date" id="exam" required></div>
+            <div class="form-actions"><button id="addBtn">Add Subject</button><button id="cancelBtn" class="secondary" type="button" style="display:none;">Cancel Edit</button></div>
             <div id="messageBox" class="message" style="display:none;"></div>
         </section>
-
         <section class="panel">
             <h2>Dashboard</h2>
-
-            <div class="stats">
-                <div class="stat-card">
-                    <span>Total Subjects</span>
-                    <strong id="totalSubjects">0</strong>
-                </div>
-                <div class="stat-card">
-                    <span>High Priority</span>
-                    <strong id="highSubjects">0</strong>
-                </div>
-                <div class="stat-card">
-                    <span>Nearest Exam</span>
-                    <strong id="nearestExam">None</strong>
-                </div>
-            </div>
-
+            <div class="stats"><div class="stat-card"><span>Total Subjects</span><strong id="totalSubjects">0</strong></div><div class="stat-card"><span>High Priority</span><strong id="highSubjects">0</strong></div><div class="stat-card"><span>Nearest Exam</span><strong id="nearestExam">None</strong></div></div>
             <h2>Study Recommendations</h2>
-            <button id="planBtn">Generate Plan</button>
+            <div class="button-row"><button id="planBtn">Generate Plan</button><button id="resetBtn" class="secondary" type="button">Reset All</button></div>
             <div id="planBox"></div>
         </section>
     </div>
-
-    <section class="panel">
-        <h2>Subjects</h2>
-        <div id="subjectList"></div>
-    </section>
-
+    <section class="panel"><h2>Subjects</h2><div id="subjectList"></div></section>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
-
 </html>
