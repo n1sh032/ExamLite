@@ -45,5 +45,24 @@ def get_subjects():
     return jsonify(subjects)
 
 
+@app.route("/delete_subject", methods=["POST"])
+def delete_subject():
+
+    data = request.json
+    index = data["index"]
+
+    file = "data/subjects.json"
+
+    with open(file, "r") as f:
+        subjects = json.load(f)
+
+    subjects.pop(index)
+
+    with open(file, "w") as f:
+        json.dump(subjects, f, indent=4)
+
+    return jsonify({"message": "deleted"})
+
+
 if __name__ == "__main__":
     app.run(debug=True)

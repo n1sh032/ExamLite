@@ -2,14 +2,14 @@ let btn = document.getElementById("addBtn");
 
 loadSubjects();
 
-btn.addEventListener("click", function(){
+btn.addEventListener("click", function () {
 
     let subject = document.getElementById("subject").value;
     let cu = document.getElementById("cu").value;
     let priority = document.getElementById("priority").value;
     let exam = document.getElementById("exam").value;
 
-    if(subject == "" || cu == "" || exam == ""){
+    if (subject == "" || cu == "" || exam == "") {
         alert("Fill in all fields");
         return;
     }
@@ -17,7 +17,7 @@ btn.addEventListener("click", function(){
     fetch("/add_subject", {
         method: "POST",
         headers: {
-            "Content-Type":"application/json"
+            "Content-Type": "application/json"
         },
         body: JSON.stringify({
             subject: subject,
@@ -38,7 +38,8 @@ btn.addEventListener("click", function(){
 
 });
 
-function loadSubjects(){
+
+function loadSubjects() {
 
     fetch("/get_subjects")
     .then(response => response.json())
@@ -48,15 +49,36 @@ function loadSubjects(){
 
         list.innerHTML = "";
 
-        for(let i = 0; i < data.length; i++){
+        for (let i = 0; i < data.length; i++) {
 
             list.innerHTML +=
-            "<b>" + data[i].subject + "</b><br>" +
-            "CU: " + data[i].cu + "<br>" +
-            "Priority: " + data[i].priority + "<br>" +
-            "Exam: " + data[i].exam + "<hr>";
+                "<b>" + data[i].subject + "</b><br>" +
+                "CU: " + data[i].cu + "<br>" +
+                "Priority: " + data[i].priority + "<br>" +
+                "Exam: " + data[i].exam + "<br>" +
+                "<button onclick='delSub(" + i + ")'>Delete</button>" +
+                "<hr>";
         }
 
+    });
+
+}
+
+
+function delSub(i) {
+
+    fetch("/delete_subject", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            index: i
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        loadSubjects();
     });
 
 }
