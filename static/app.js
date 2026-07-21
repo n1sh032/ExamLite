@@ -1,17 +1,17 @@
-let btn = document.getElementById("addBtn");
-let planBtn = document.getElementById("planBtn");
+const btn = document.getElementById("addBtn");
+const planBtn = document.getElementById("planBtn");
+const messageBox = document.getElementById("messageBox");
 
 loadSubjects();
 
 btn.addEventListener("click", function () {
+    const subject = document.getElementById("subject").value.trim();
+    const cu = document.getElementById("cu").value.trim();
+    const priority = document.getElementById("priority").value;
+    const exam = document.getElementById("exam").value;
 
-    let subject = document.getElementById("subject").value;
-    let cu = document.getElementById("cu").value;
-    let priority = document.getElementById("priority").value;
-    let exam = document.getElementById("exam").value;
-
-    if (subject == "" || cu == "" || exam == "") {
-        alert("Fill in all fields");
+    if (!subject || !cu || !exam) {
+        showMessage("Please fill in all required fields.", "warning");
         return;
     }
 
@@ -27,93 +27,124 @@ btn.addEventListener("click", function () {
             exam: exam
         })
     })
-    .then(response => response.json())
-    .then(data => {
-
-        document.getElementById("subject").value = "";
-        document.getElementById("cu").value = "";
-        document.getElementById("exam").value = "";
-
-        loadSubjects();
-    });
-
+        .then(response => response.json())
+        .then(() => {
+            document.getElementById("subject").value = "";
+            document.getElementById("cu").value = "";
+            document.getElementById("exam").value = "";
+            document.getElementById("subject").focus();
+            loadSubjects();
+            showMessage("Subject added successfully.", "info");
+        });
 });
 
 planBtn.addEventListener("click", function () {
-
     fetch("/study_plan")
-    .then(response => response.json())
-    .then(data => {
+        .then(response => response.json())
+        .then(data => {
+            const box = document.getElementById("planBox");
+            box.innerHTML = "";
 
-        let box = document.getElementById("planBox");
+            if (data.length === 0) {
+                box.innerHTML = "<p class='empty'>Add a subject first to generate a study recommendation.</p>";
+                return;
+            }
 
-        box.innerHTML = "";
+            data.forEach(item => {
+                const hoursLabel = item.hours > 0 ? `${item.hours} hrs/week` : "Review overdue subject";
+                const statusLabel = item.status ? `<div class='small-text'>${item.status}</div>` : "";
 
-        for (let i = 0; i < data.length; i++) {
-
-            box.innerHTML +=
-                "<b>" +
-                data[i].subject +
-                "</b> : " +
-                data[i].hours +
-                " hrs/week<br>";
-        }
-
-    });
-
+                box.innerHTML += `
+                    <div class='plan-item'>
+                        <div class='plan-title'>${item.subject}</div>
+                        ${statusLabel}
+                        <div><strong>${hoursLabel}</strong></div>
+                    </div>
+                `;
+            });
+        });
 });
 
+function showMessage(text, type = "info") {
+    messageBox.textContent = text;
+    messageBox.className = `message ${type}`;
+    messageBox.style.display = "block";
+    clearTimeout(showMessage.timeoutId);
+    showMessage.timeoutId = setTimeout(() => {
+        messageBox.style.display = "none";
+    }, 4000);
+}
+
+function getDaysUntil(dateString) {
+    const examDate = new Date(dateString);
+    if (Number.isNaN(examDate.getTime())) {
+        return null;
+    }
+    const msPerDay = 1000 * 60 * 60 * 24;
+    return Math.ceil((examDate - new Date()) / msPerDay);
+}
+
 function loadSubjects() {
-
     fetch("/get_subjects")
-    .then(response => response.json())
-    .then(data => {
+        .then(response => response.json())
+        .then(data => {
+            const list = document.getElementById("subjectList");
+            list.innerHTML = "";
 
-        let list = document.getElementById("subjectList");
+            let highCount = 0;
+            let nearestExam = null;
+            let nearestDays = null;
 
-        list.innerHTML = "";
-
-        let highCount = 0;
-        let nearestExam = null;
-
-        for (let i = 0; i < data.length; i++) {
-
-            if (data[i].priority == "High") {
-                highCount++;
+            if (data.length === 0) {
+                list.innerHTML = "<p class='empty'>No subjects added yet. Add one above to begin tracking your exam plan.</p>";
             }
 
-            if (nearestExam == null) {
-                nearestExam = data[i].exam;
+            data.forEach((item, index) => {
+                if (item.priority === "High") {
+                    highCount++;
+                }
+
+                const daysUntil = getDaysUntil(item.exam);
+                if (daysUntil !== null && (nearestDays === null || daysUntil < nearestDays)) {
+                    nearestDays = daysUntil;
+                    nearestExam = item.exam;
+                }
+
+                const examText = daysUntil === null
+                    ? "No exam date"
+                    : daysUntil < 0
+                        ? `Past due ${Math.abs(daysUntil)} day(s)`
+                        : `In ${daysUntil} day(s)`;
+
+                list.innerHTML += `
+                    <div class='card'>
+                        <div class='card-head'>
+                            <strong>${item.subject}</strong>
+                            <span class='tag ${item.priority.toLowerCase()}'>${item.priority}</span>
+                        </div>
+                        <div>CU: ${item.cu}</div>
+                        <div>Exam: ${item.exam || "Not set"}</div>
+                        <div class='small-text'>${examText}</div>
+                        <button class='deleteBtn' onclick='delSub(${index})'>Delete</button>
+                    </div>
+                `;
+            });
+
+            document.getElementById("totalSubjects").innerText = data.length;
+            document.getElementById("highSubjects").innerText = highCount;
+
+            if (nearestExam !== null) {
+                const nearestText = nearestDays >= 0
+                    ? `${nearestExam} (${nearestDays} day${nearestDays === 1 ? "" : "s"})`
+                    : `${nearestExam} (past due)`;
+                document.getElementById("nearestExam").innerText = nearestText;
+            } else {
+                document.getElementById("nearestExam").innerText = "None";
             }
-            else if (data[i].exam < nearestExam) {
-                nearestExam = data[i].exam;
-            }
-
-            list.innerHTML +=
-                "<b>" + data[i].subject + "</b><br>" +
-                "CU: " + data[i].cu + "<br>" +
-                "Priority: " + data[i].priority + "<br>" +
-                "Exam: " + data[i].exam + "<br>" +
-                "<button onclick='delSub(" + i + ")'>Delete</button>" +
-                "<hr>";
-        }
-
-        document.getElementById("totalSubjects").innerText = data.length;
-        document.getElementById("highSubjects").innerText = highCount;
-
-        if (nearestExam != null) {
-            document.getElementById("nearestExam").innerText = nearestExam;
-        }
-        else {
-            document.getElementById("nearestExam").innerText = "None";
-        }
-
-    });
-
+        });
 }
 
 function delSub(i) {
-
     fetch("/delete_subject", {
         method: "POST",
         headers: {
@@ -123,9 +154,9 @@ function delSub(i) {
             index: i
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        loadSubjects();
-    });
-
+        .then(response => response.json())
+        .then(() => {
+            loadSubjects();
+            showMessage("Subject removed.", "info");
+        });
 }
