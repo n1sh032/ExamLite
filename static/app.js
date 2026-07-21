@@ -1,4 +1,5 @@
 let btn = document.getElementById("addBtn");
+let planBtn = document.getElementById("planBtn");
 
 loadSubjects();
 
@@ -34,6 +35,30 @@ btn.addEventListener("click", function () {
         document.getElementById("exam").value = "";
 
         loadSubjects();
+    });
+
+});
+
+planBtn.addEventListener("click", function () {
+
+    fetch("/study_plan")
+    .then(response => response.json())
+    .then(data => {
+
+        let box = document.getElementById("planBox");
+
+        box.innerHTML = "";
+
+        for (let i = 0; i < data.length; i++) {
+
+            box.innerHTML +=
+                "<b>" +
+                data[i].subject +
+                "</b> : " +
+                data[i].hours +
+                " hrs/week<br>";
+        }
+
     });
 
 });
