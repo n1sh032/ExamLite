@@ -1,29 +1,48 @@
-var btn = document.getElementById('addBtn');
-var cancelBtn = document.getElementById('cancelBtn');
-var planBtn = document.getElementById('planBtn');
-var resetBtn = document.getElementById('resetBtn');
+var addButton = document.getElementById('addBtn');
+var cancelButton = document.getElementById('cancelBtn');
+var planButton = document.getElementById('planBtn');
+var resetButton = document.getElementById('resetBtn');
 var messageBox = document.getElementById('messageBox');
-var editingIndex = null;
+var editIndex = null;
 
+var icons = {
+    add: '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6z" fill="currentColor"/></svg>',
+    edit: '<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 21v-3.75L14.81 5.44a2 2 0 012.83 0l2.92 2.92a2 2 0 010 2.83L8.75 21H3z" fill="currentColor"/></svg>',
+    del: '<svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M8 6v12a2 2 0 002 2h4a2 2 0 002-2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    plan: '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 7h18M8 3v4M16 3v4M5 21h14a2 2 0 002-2V7H3v12a2 2 0 002 2z" fill="currentColor"/></svg>',
+    reset: '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 12a9 9 0 11-3.2-6.4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+
+function setAddLabel(text) {
+    addButton.innerHTML = icons.add + '<span>' + text + '</span>';
+}
+
+function setCancelLabel(text) {
+    cancelButton.innerHTML = '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>' + text + '</span>';
+}
+
+// Theme toggle removed - keep single theme
+setAddLabel('Add Subject');
+setCancelLabel('Cancel Edit');
 loadSubjects();
 
-btn.addEventListener('click', function() {
+addButton.addEventListener('click', function() {
     var data = getFormData();
     var errors = validateForm(data);
     if (errors.length) {
         showMessage(errors.join(' '), 'warning');
         return;
     }
-    if (editingIndex === null) {
+    if (editIndex === null) {
         saveSubject('/add_subject', data, 'Subject added.');
     } else {
-        saveSubject('/edit_subject', {index: editingIndex, subject: data.subject, cu: data.cu, priority: data.priority, exam: data.exam}, 'Subject updated.');
+        saveSubject('/edit_subject', {index: editIndex, subject: data.subject, cu: data.cu, priority: data.priority, exam: data.exam}, 'Subject updated.');
     }
 });
 
-cancelBtn.addEventListener('click', resetForm);
+cancelButton.addEventListener('click', resetForm);
 
-planBtn.addEventListener('click', function() {
+planButton.addEventListener('click', function() {
     fetch('/study_plan')
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -42,7 +61,7 @@ planBtn.addEventListener('click', function() {
     });
 });
 
-resetBtn.addEventListener('click', function() {
+resetButton.addEventListener('click', function() {
     if (!confirm('Remove all subjects?')) return;
     fetch('/reset_subjects', { method: 'POST' })
     .then(function() { resetForm(); loadSubjects(); document.getElementById('planBox').innerHTML = ''; showMessage('Reset done', 'info'); });
@@ -80,13 +99,14 @@ function saveSubject(url, body, msg) {
 }
 
 function resetForm() {
-    editingIndex = null;
+    editIndex = null;
     document.getElementById('subject').value = '';
     document.getElementById('cu').value = '';
     document.getElementById('priority').value = 'High';
     document.getElementById('exam').value = '';
-    btn.textContent = 'Add Subject';
-    cancelBtn.style.display = 'none';
+    setAddLabel('Add Subject');
+    setCancelLabel('Cancel Edit');
+    cancelButton.style.display = 'none';
 }
 
 function showMessage(txt, type) {
@@ -111,26 +131,26 @@ function loadSubjects() {
         var list = document.getElementById('subjectList');
         list.innerHTML = '';
         var highCount = 0;
-        var nearestExam = null;
-        var nearestDays = null;
+        var nextExam = null;
+        var nextDays = null;
         if (!data.length) {
             list.innerHTML = '<p class="empty">No subjects yet.</p>';
         }
         data.forEach(function(item, index) {
             if (item.priority === 'High') highCount++;
             var daysUntil = getDaysUntil(item.exam);
-            if (daysUntil !== null && (nearestDays === null || daysUntil < nearestDays)) {
-                nearestDays = daysUntil;
-                nearestExam = item.exam;
+            if (daysUntil !== null && (nextDays === null || daysUntil < nextDays)) {
+                nextDays = daysUntil;
+                nextExam = item.exam;
             }
             var examText = daysUntil === null ? 'No exam date' : (daysUntil < 0 ? 'Past due ' + Math.abs(daysUntil) + ' day(s)' : 'In ' + daysUntil + ' day(s)');
             list.innerHTML += '<div class="card"><div class="card-head"><strong>' + item.subject + '</strong><span class="tag ' + item.priority.toLowerCase() + '">' + item.priority + '</span></div>' +
                 '<div>CU: ' + item.cu + '</div><div>Exam: ' + (item.exam || 'Not set') + '</div><div class="small-text">' + examText + '</div>' +
-                '<div class="card-actions"><button class="secondary" onclick="editSub(' + index + ')">Edit</button><button class="deleteBtn" onclick="delSub(' + index + ')">Delete</button></div></div>';
+                '<div class="card-actions"><button class="secondary" onclick="editSub(' + index + ')">' + icons.edit + ' Edit</button><button class="deleteBtn" onclick="delSub(' + index + ')">' + icons.del + ' Delete</button></div></div>';
         });
         document.getElementById('totalSubjects').innerText = data.length;
         document.getElementById('highSubjects').innerText = highCount;
-        document.getElementById('nearestExam').innerText = nearestExam ? (nearestDays >= 0 ? nearestExam + ' ('+nearestDays+' day'+(nearestDays === 1? '':'s')+')' : nearestExam + ' (past due)') : 'None';
+        document.getElementById('nearestExam').innerText = nextExam ? (nextDays >= 0 ? nextExam + ' (' + nextDays + ' day' + (nextDays === 1 ? '' : 's') + ')' : nextExam + ' (past due)') : 'None';
     });
 }
 
@@ -149,13 +169,13 @@ window.editSub = function(index) {
     .then(function(data){
         var item = data[index];
         if (!item) { showMessage('Subject not found.', 'warning'); return; }
-        editingIndex = index;
+        editIndex = index;
         document.getElementById('subject').value = item.subject;
         document.getElementById('cu').value = item.cu;
         document.getElementById('priority').value = item.priority;
         document.getElementById('exam').value = item.exam;
-        btn.textContent = 'Save Changes';
-        cancelBtn.style.display = 'inline-block';
+        setAddLabel('Save Changes');
+        cancelButton.style.display = 'inline-block';
         window.scrollTo(0,0);
     });
 };
